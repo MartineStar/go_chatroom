@@ -6,6 +6,7 @@ import (
 	"go_chat/chatroom/common/message"
 	"go_chat/chatroom/server/util"
 	"encoding/json"
+	"go_chat/chatroom/server/model"
 )
 
 type UserProcess struct{
@@ -27,17 +28,38 @@ func (this *UserProcess) ServerProcessLogin(mes *message.Message) (err error){
 	var resMes message.Message
 	resMes.Type = message.LoginResMesType
 
+
+
 	//2.在声明一个LoginResMes，完成赋值
 	// var loginResMes message.LoginResMesType
 	var loginResMes message.LoginResMes
 
-	//如果用户id=100，密码为123456，则合法
-	if loginMes.UserId ==100 && loginMes.UserPwd =="123456" {
-		loginResMes.Code =200
-	}else {
-		loginResMes.Code =500
-		loginResMes.Error = "该用户不存在，请注册在使用"
+	//2.去redis中核对用户信息
+	user,err := model.MyUserDao.Login(loginMes.UserId,loginMes.UserPwd)
+	
+	if err != nil{
+		if err == model.ERROR_USER_NOTEXISTS{
+			loginResMes.Code = 500
+			loginResMes.Error = err.Error()
+		}else if err == model.ERROR_USER_NOTEXISTS{
+			loginResMes.Code = 403
+			loginResMes.Error = err.Error()
+		}else{
+			loginResMes.Code = 500
+			loginResMes.Error = "该用户不存在，请注册再使用..."
+		}
+
+	}else{
+		loginResMes.Code = 200
+		fmt.Println(user,"登录成功")
 	}
+	// //如果用户id=100，密码为123456，则合法
+	// if loginMes.UserId ==100 && loginMes.UserPwd =="123456" {
+	// 	loginResMes.Code =200
+	// }else {
+	// 	loginResMes.Code =500
+	// 	loginResMes.Error = "该用户不存在，请注册在使用"
+	// }
 
 	//3.将loginResMes序列化
 	data,err := json.Marshal(loginResMes)

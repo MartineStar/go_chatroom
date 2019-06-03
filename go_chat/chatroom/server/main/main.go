@@ -6,8 +6,10 @@ import (
 	// "go_chat/chatroom/common/message"
 	// "encoding/binary"
 	// "encoding/json"
-	_ "errors"
+	// _ "errors"
 	// "io"
+	"time"
+	"go_chat/chatroom/server/model"
 )
 
 // func readPkg(conn net.Conn) (mes message.Message,err error){
@@ -151,8 +153,20 @@ func process1(conn net.Conn){
 	}
 }
 
-func main(){
-	fmt.Println("服务器在8889端口监听~~~~~....")
+//编写函数，完成对UserDao的初始化
+func initUserDao(){
+	//此处pool本身就是redis.go中定义的全局变量，注意先完成initPool的调用
+	model.MyUserDao = model.NewUserDao(pool)
+}
+
+func init(){
+	//初始化redis连接池和database access object
+	initPool("localhost:6379",16,0,300*time.Second)
+	initUserDao()
+}
+
+func main(){	
+	fmt.Println("服务器在8889端口监听....")
 	listen,err := net.Listen("tcp","0.0.0.0:8889")
 	if err != nil{
 		fmt.Println("net.Listen err=",err)
