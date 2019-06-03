@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go_chat/chatroom/client/process"
 )
 
 func main(){
@@ -25,6 +26,16 @@ func main(){
 		switch key{
 			case 1:
 				fmt.Println("登录聊天室")
+				fmt.Println("请输入用户id")
+				fmt.Scanf("%d\n",&userId)
+				fmt.Println("请输入用户密码")
+				fmt.Scanf("%s\n",&userPwd)
+				//完成登录
+				up := &process.UserProcess{}
+				up.Login(userId,userPwd)
+
+				// login(userId,userPwd)
+		
 				loop = false
 			case 2:
 				fmt.Println("注册用户")
@@ -37,15 +48,4 @@ func main(){
 		}
 	}
 
-	if key ==1 {
-		fmt.Println("请输入用户id")
-		fmt.Scanf("%d\n",&userId)
-		fmt.Println("请输入用户密码")
-		fmt.Scanf("%s\n",&userPwd)
-		login(userId,userPwd)
-		
-		
-	} else if key ==2{
-		fmt.Println("进行用户注册...")
-	}
 }
