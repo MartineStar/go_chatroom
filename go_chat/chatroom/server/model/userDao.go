@@ -31,6 +31,7 @@ func NewUserDao(pool *redis.Pool) (userDao *UserDao){
 func (this *UserDao) getUserById(conn redis.Conn,id int) (user *User,err error){
 	//通过给定的id去redis查询用户
 	res,err := redis.String(conn.Do("HGet","users",id))
+	fmt.Println(res)
 	if err != nil{
 		//错误
 		if err == redis.ErrNil{    //表示在users哈希中，没有对应的id
@@ -38,6 +39,8 @@ func (this *UserDao) getUserById(conn redis.Conn,id int) (user *User,err error){
 		}
 		return
 	}
+	//此处注意指针类型要初始化，不然不能使用
+	user = &User{}
 
 	//把res反序列化成Users实例
 	err = json.Unmarshal([]byte(res),user)

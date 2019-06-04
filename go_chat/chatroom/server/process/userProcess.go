@@ -11,6 +11,58 @@ import (
 
 type UserProcess struct{
 	Conn net.Conn
+	UserId int	//旨在指明这个conn是属于哪个用户
+}
+
+//单独通知的方法
+func (this *UserProcess) NotifyMeOnline(userId int){
+	var mes message.Message
+	mes.Type = message.NotifyUserStatusMesType
+
+	var notifyUserStatusMes message.NotifyUserStatusMes
+	notifyUserStatusMes.UserId = userId
+	notifyUserStatusMes.Status = message.UserOnline
+
+	//序列化
+	data,err := json.Marshal(notifyUserStatusMes)
+	if err != nil{
+		fmt.Println("json.Marshal err=",err)
+		return
+	}
+
+	mes.Data = string(data)
+
+	//序列化mes
+	data,err = json.Marshal(mes)
+	if err != nil{
+		fmt.Println("json.Marshal err=",err)
+		return
+	}
+
+	//发送
+	tf := &utils.Transfer{
+		Conn :this.Conn,
+	}
+
+	err = tf.WritePkg(data)
+	if err != nil{
+		fmt.Println("notyfymeOnline err=",err)
+		return
+	}
+
+}
+
+
+//通知所有在线用户的方法,userId要通知其他用户我上线了
+func (this *UserProcess) NotifyOthersOnlineUser(userId int){
+	//遍历onlineUsers,然后一个个发送NotifyUserStatusMes
+	for id,up := range userMgr.onlineUsers{
+		if id == userId{
+			continue
+		}
+		//开始通知
+		up.NotifyMeOnline(userId)
+	}
 }
 
 func (this *UserProcess) ServerProcessRegister(mes *message.Message) (err error){
@@ -40,7 +92,8 @@ func (this *UserProcess) ServerProcessRegister(mes *message.Message) (err error)
 			registerResMes.Error = "注册时发生未知错误"
 		}
 	}else{
-		registerResMes.Code = 200		
+		registerResMes.Code = 200	
+
 	}
 
 	//3.将registerResMes序列化
@@ -108,6 +161,19 @@ func (this *UserProcess) ServerProcessLogin(mes *message.Message) (err error){
 
 	}else{
 		loginResMes.Code = 200
+		//将登录成功的用户的userId放入对应的UserProcess实例
+		this.UserId = loginMes.UserId
+		userMgr.AddOnlineUser(this)
+
+		//通知其他用户我上线了
+		this.NotifyOthersOnlineUser(loginMes.UserId)
+
+		//遍历userMgr.onlineUsers,获取userId
+		for id,_ := range userMgr.onlineUsers{
+			loginResMes.UsersId = append(loginResMes.UsersId,id)
+		}
+		
+
 		fmt.Println(user,"登录成功")
 	}
 	// //如果用户id=100，密码为123456，则合法

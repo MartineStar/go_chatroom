@@ -1,10 +1,18 @@
 package message
 
 const(
-	LoginMesType		= "LoginMes"
-	LoginResMesType		= "LoginResMes"
-	RegisterMesType		= "RegisterMes"
-	RegisterResMesType 	= "RegisterResMes"
+	LoginMesType			= "LoginMes"
+	LoginResMesType			= "LoginResMes"
+	RegisterMesType			= "RegisterMes"
+	RegisterResMesType 		= "RegisterResMes"
+	NotifyUserStatusMesType ="NotifyUserStatusMes"
+)
+
+//用户状态常量
+const (
+	UserOnline = iota
+	UserOffline
+	UserBusyStatus
 )
 
 type RegisterMes struct{
@@ -13,6 +21,9 @@ type RegisterMes struct{
 
 type RegisterResMes struct{
 	Code int		`json:"code"`	//返回状态码，400表示该用户被占用，200表示注册成功
+	//Users []int切片用于将在线用户id返回，用户登录后可以显示在线用户列表
+	Users []int
+
 	Error string 	`json:"error"`	//返回错误信息
 }
 
@@ -32,5 +43,12 @@ type LoginMes struct{
 //
 type LoginResMes struct{
 	Code int   `json:"code"`//返回状态码，500表示该用户未注册，200表示登录成功
+	UsersId []int		//保存用户id的切片
 	Error string  `json:"error"`//返回的错误信息
+}
+
+//服务器推送用户状态变化的消息
+type NotifyUserStatusMes struct{
+	UserId int 		`json:"userId"`	//用户id
+	Status int		`json:"status"`	//用户状态
 }
