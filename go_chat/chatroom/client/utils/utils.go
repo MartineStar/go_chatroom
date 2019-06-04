@@ -16,7 +16,7 @@ type Transfer struct{
 
 func (this *Transfer) ReadPkg() (mes message.Message,err error){
 	
-	fmt.Println("等待读取客户端发送的消息。。。")
+	// fmt.Println("等待读取客户端发送的消息。。。")
 	//阻塞等待客户端发送消息，如果客户端断开链接，不再阻塞
 	_,err = this.Conn.Read(this.Buf[:4])
 	if err != nil{
@@ -28,11 +28,11 @@ func (this *Transfer) ReadPkg() (mes message.Message,err error){
 	//根据buf[:4]转成一个uint32类型
 	var pkgLen uint32
 	pkgLen = binary.BigEndian.Uint32(this.Buf[:4])
-	fmt.Println("pkgLen=",pkgLen)
+	// fmt.Println("pkgLen=",pkgLen)
 	//根据pkgLen读取消息内容
 	_,err = this.Conn.Read(this.Buf[:pkgLen])
 	// fmt.Println("n=",n)
-	fmt.Println("读取到的buf：",this.Buf[:4])
+	// fmt.Println("读取到的buf：",this.Buf[:4])
 	if err != nil {
 		fmt.Println("conn.Read fail err=,n=",err)
 		// err = errors.New("read pkg body error")

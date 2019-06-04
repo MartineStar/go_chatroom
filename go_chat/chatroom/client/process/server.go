@@ -19,13 +19,20 @@ func ShowMenu(){
 	fmt.Print("----------请选择(1-4):")
 
 	var key int
+	var content string
+
+	//考虑到SmsProcess实例会一直被使用，定义在switch外部
+	smsProcess := &SmsProcess{}
+
 	fmt.Scanf("%d\n",&key)
 	switch key{
 		case 1:
-			fmt.Println("显示在线用户列表")
+			// fmt.Println("显示在线用户列表")
 			outputOnlineUser()
 		case 2:
-			fmt.Println("发送消息")
+			fmt.Print("发送消息:")
+			fmt.Scanf("%s\n",&content)
+			smsProcess.SendGroupMes(content)
 		case 3:
 			fmt.Println("信息列表")
 		case 4:
@@ -41,7 +48,7 @@ func serverProcessMes(conn net.Conn){
 	tf := &utils.Transfer{Conn:conn,}
 	//创建transfer实例，不停地读取服务端的发送的消息
 	for {
-		fmt.Printf("客户端正在读取服务器发送的消息...")
+		// fmt.Printf("客户端正在读取服务器发送的消息...\n")
 		mes,err := tf.ReadPkg()
 		if err != nil{
 			fmt.Println("tf.ReadPkg err=",err)
@@ -49,6 +56,7 @@ func serverProcessMes(conn net.Conn){
 		}
 
 		//如果读取到消息，进行下一步
+		// fmt.Println(mes)
 		switch mes.Type {
 			case message.NotifyUserStatusMesType:
 				//1.取出NotifyUserStatusMes
@@ -57,9 +65,11 @@ func serverProcessMes(conn net.Conn){
 				//2.把这个用户的信息，状态保存到客户map[int]User 中
 				updateUserStatus(&notifyUserStatusMes)
 
+			case message.SmsMesType:	//处理群发消息
+				outputGroupMes(&mes)
 			default:
 				fmt.Println("服务器返回了未知的消息类型")
 		}
-		fmt.Printf("mes=%v\n",mes)
+		// fmt.Printf("mes=%v\n",mes)
 	}
 }
