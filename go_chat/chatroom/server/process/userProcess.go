@@ -13,13 +13,70 @@ type UserProcess struct{
 	Conn net.Conn
 }
 
+func (this *UserProcess) ServerProcessRegister(mes *message.Message) (err error){
+	//取出mes.Data,并反序列化
+	var registerMes message.RegisterMes
+	json.Unmarshal([]byte(mes.Data),&registerMes)
+	if err != nil{
+		fmt.Println("register json.Unmarshal fail err =",err)
+		return
+	}
+
+	//1.声明一个resMes
+	var resMes message.Message
+	resMes.Type = message.RegisterResMesType
+	var registerResMes message.RegisterResMes
+
+	//2.去redis中校验并存入用户信息，完成注册
+	err = model.MyUserDao.Register(&registerMes.User)
+
+	if err != nil{
+		if err == model.ERROR_USER_EXIST{
+			registerResMes.Code = 505
+			//Error()方法可以取出error中的错误描述
+			registerResMes.Error = model.ERROR_USER_EXIST.Error()
+		}else{
+			registerResMes.Code = 506
+			registerResMes.Error = "注册时发生未知错误"
+		}
+	}else{
+		registerResMes.Code = 200		
+	}
+
+	//3.将registerResMes序列化
+	data,err := json.Marshal(registerResMes)
+	if err != nil{
+		fmt.Println("json.Marshal failed,err=",err)
+		return
+	}
+
+	//4.将data赋值给resMes
+	resMes.Data = string(data)
+
+	//5.对resMes进行序列化，准备发送
+	data,err = json.Marshal(resMes)
+	if err !=nil{
+		fmt.Println("json.Marshal fail,err=",err)
+		return
+	}
+
+	//6.发送data
+	//分层模式mvc，先创建Transfer实例，然后读取
+	tf := &utils.Transfer{
+		Conn : this.Conn,
+	}
+	err =tf.WritePkg(data)
+	return
+}
+
+
 //serverProcessLogin，专门处理登录请求
 func (this *UserProcess) ServerProcessLogin(mes *message.Message) (err error){
-	//去除mes.Data,并反序列化
+	//取出mes.Data,并反序列化
 	var loginMes message.LoginMes
 	json.Unmarshal([]byte(mes.Data),&loginMes)
 	if err != nil{
-		fmt.Println("json.Unmarshal fail err =",err)
+		fmt.Println("login json.Unmarshal fail err =",err)
 		return
 	}
 

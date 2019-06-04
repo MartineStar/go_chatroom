@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"encoding/json"
+	"go_chat/chatroom/common/message"
 )
 
 
@@ -45,6 +46,33 @@ func (this *UserDao) getUserById(conn redis.Conn,id int) (user *User,err error){
 		return
 	}
 	return
+}
+
+//完成用户注册
+func (this *UserDao) Register(user *message.User) (err error){
+	//先从UserDao连接池中取出一个链接
+	conn := this.pool.Get()
+	defer conn.Close()
+	_,err = this.getUserById(conn,user.UserId)
+	if err == nil{	//如果不报错，则说明这个id存在了
+		err = ERROR_USER_NOTEXISTS
+		return
+	}
+
+	//序列化，入库，完成注册
+	data,err := json.Marshal(user)
+	if err != nil{
+		return
+	}
+
+	//入库
+	_,err = conn.Do("Hset","users",user.UserId,string(data))
+	if err != nil{
+		fmt.Println("保存注册用户错误，err=",err)
+		return
+	}
+	return
+
 }
 
 //完成用户登录校验

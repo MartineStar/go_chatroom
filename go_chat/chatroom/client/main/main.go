@@ -9,6 +9,7 @@ func main(){
 
 	var userId int
 	var userPwd string
+	var userName string
 	//接受用户选择
 	var key int
 
@@ -36,10 +37,19 @@ func main(){
 
 				// login(userId,userPwd)
 		
-				loop = false
+				// loop = false
 			case 2:
-				fmt.Println("注册用户")
-				loop = false
+				fmt.Println("--------注册用户------------")
+				fmt.Print("请输入用户id:")
+				fmt.Scanln(&userId)
+				fmt.Print("请输入用户密码:")
+				fmt.Scanln(&userPwd)
+				fmt.Print("请输入用户昵称:")
+				fmt.Scanln(&userName)
+				//调用UserProcess，完成注册请求
+				up := &process.UserProcess{}
+				up.Register(userId,userPwd,userName)
+				// loop = false
 			case 3:
 				fmt.Println("退出系统")
 				loop = false
